@@ -31,21 +31,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Import and Include Routers ---
-# 1. Chatbot
+# Import and include all routers
 from app.chatbot import router as chatbot_router
-app.include_router(chatbot_router)
-
-# 2. Reminders
 from app.routes.reminders import router as reminders_router
-app.include_router(reminders_router)
-
-# 3. Users & Pairs
 from app.routes.users_pairs import router as users_pairs_router
-app.include_router(users_pairs_router)
-
-# 4. Face Recognition
 from app.routes.face_recognition import router as face_router
+
+app.include_router(chatbot_router)
+app.include_router(reminders_router)
+app.include_router(users_pairs_router)
 app.include_router(face_router)
 
 @app.on_event("startup")

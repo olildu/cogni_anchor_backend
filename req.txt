@@ -1,9 +1,16 @@
 fastapi[all]
 uvicorn
-# Database
 sqlalchemy
-psycopg2-binary # PostgreSQL driver
-# Face Recognition
-face-recognition # Simple API wrapper for dlib, good accuracy
+psycopg2-binary
+face-recognition
 numpy
-opencv-python-headless # For image processing (required by face-recognition/dlib)
+opencv-python-headless
+openai
+python-dotenv
+pyttsx3
+sounddevice
+scipy
+google-generativeai
+supabase
+deepfake
+tf-keras
