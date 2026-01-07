@@ -6,6 +6,7 @@ Uses OpenAI's Whisper model running locally for speech-to-text
 import os
 import logging
 import tempfile
+import subprocess
 from typing import Optional
 
 logger = logging.getLogger("LocalWhisperService")
@@ -18,19 +19,6 @@ _model_loaded = False
 def load_whisper_model(model_name: str = "base"):
     """
     Load Whisper model (lazy loading)
-
-    Available models (by size and accuracy):
-    - tiny: Fastest, least accurate (~1GB RAM)
-    - base: Fast, good for most cases (~1GB RAM) - DEFAULT
-    - small: More accurate (~2GB RAM)
-    - medium: High accuracy (~5GB RAM)
-    - large: Best accuracy (~10GB RAM)
-
-    Args:
-        model_name: Name of the Whisper model to load
-
-    Returns:
-        Loaded Whisper model
     """
     global _whisper_model, _model_loaded
 
@@ -40,6 +28,7 @@ def load_whisper_model(model_name: str = "base"):
     try:
         import whisper
         logger.info(f"Loading Whisper model: {model_name}")
+        # Download and load the model (happens only once)
         _whisper_model = whisper.load_model(model_name)
         _model_loaded = True
         logger.info(f"Whisper model '{model_name}' loaded successfully!")
@@ -58,14 +47,6 @@ def transcribe_audio_local(
 ) -> Optional[str]:
     """
     Transcribe audio file using local Whisper model
-
-    Args:
-        audio_file_path: Path to audio file (mp3, wav, m4a, etc.)
-        model_name: Whisper model to use (tiny/base/small/medium/large)
-        language: Language code (en, es, fr, etc.) - None for auto-detect
-
-    Returns:
-        Transcribed text or None if error
     """
     model = load_whisper_model(model_name)
 
@@ -77,10 +58,11 @@ def transcribe_audio_local(
         logger.info(f"Transcribing audio file: {audio_file_path}")
 
         # Transcribe with Whisper
+        # fp16=False is safer for CPU usage to avoid warnings
         result = model.transcribe(
             audio_file_path,
             language=language,
-            fp16=False  # Use FP32 for CPU (FP16 for GPU)
+            fp16=False 
         )
 
         text = result["text"].strip()
@@ -101,34 +83,57 @@ async def transcribe_audio_bytes_local(
     model_name: str = "base"
 ) -> Optional[str]:
     """
-    Transcribe audio from bytes using local Whisper
-
-    Args:
-        audio_bytes: Audio file bytes
-        filename: Temporary filename extension
-        model_name: Whisper model to use
-
-    Returns:
-        Transcribed text or None if error
+    Transcribe audio from bytes using local Whisper.
+    Converts input audio to safe WAV format before processing.
     """
+    input_path = None
+    output_path = None
+    
     try:
-        # Create temporary file
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as temp_file:
+        # 1. Determine extension
+        _, ext = os.path.splitext(filename)
+        if not ext:
+            ext = ".aac" # Default for Flutter sound
+
+        # 2. Save raw bytes to a temp file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as temp_file:
             temp_file.write(audio_bytes)
-            temp_path = temp_file.name
+            input_path = temp_file.name
 
-        # Transcribe using local Whisper
-        text = transcribe_audio_local(temp_path, model_name=model_name)
+        logger.info(f"Saved temp audio: {input_path} ({len(audio_bytes)} bytes)")
 
-        # Clean up temp file
-        os.unlink(temp_path)
+        # 3. Convert to 16kHz Mono WAV (Standard for Whisper)
+        # This fixes issues with AAC/M4A/MP3 containers
+        output_path = input_path + "_converted.wav"
+        
+        try:
+            subprocess.run([
+                "ffmpeg", "-y",           # Overwrite if exists
+                "-i", input_path,         # Input file
+                "-ar", "16000",           # 16k Sample rate
+                "-ac", "1",               # Mono channel
+                "-c:a", "pcm_s16le",      # WAV codec
+                output_path               # Output file
+            ], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            
+            logger.info("Audio converted to 16kHz WAV successfully")
+            file_to_transcribe = output_path
+            
+        except (subprocess.CalledProcessError, FileNotFoundError) as e:
+            logger.warning(f"FFmpeg conversion failed (using original): {e}")
+            file_to_transcribe = input_path
 
+        # 4. Transcribe the clean file
+        text = transcribe_audio_local(file_to_transcribe, model_name=model_name)
         return text
 
     except Exception as e:
         logger.error(f"Error transcribing audio bytes: {e}")
         return None
-
-
-# Preload model on module import (optional - comment out to lazy load)
-# load_whisper_model("base")
+        
+    finally:
+        # 5. Cleanup temp files
+        if input_path and os.path.exists(input_path):
+            os.unlink(input_path)
+        if output_path and os.path.exists(output_path):
+            os.unlink(output_path)

@@ -4,8 +4,10 @@ Integrated backend with chatbot, face recognition, reminders, and user managemen
 """
 
 import logging
+import os  # <--- Added os import
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles  # <--- Added this import
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -31,6 +33,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# --- Mount Static Directory for Audio (CRITICAL FIX) ---
+# This makes files in the 'temp' folder accessible via http://localhost:9002/temp/filename.wav
+os.makedirs("temp", exist_ok=True)
+app.mount("/temp", StaticFiles(directory="temp"), name="temp")
+
 # --- Import and Include Routers ---
 # 1. Chatbot
 from app.chatbot import router as chatbot_router
@@ -48,11 +55,15 @@ app.include_router(users_pairs_router)
 from app.routes.face_recognition import router as face_router
 app.include_router(face_router)
 
+# 5. Agent (NEW)
+from app.routes.agent import router as agent_router
+app.include_router(agent_router)
+
 @app.on_event("startup")
 def startup_event():
     logger.info("CogniAnchor Complete API startup complete!")
     logger.info("API documentation available at: http://localhost:8000/docs")
-    logger.info("Features: Chatbot, Face Recognition, Reminders, User Management")
+    logger.info("Features: Chatbot, Face Recognition, Reminders, User Management, LangGraph Agent")
 
 @app.get("/")
 def read_root():
@@ -62,6 +73,7 @@ def read_root():
         "status": "running",
         "features": [
             "AI Chatbot (Gemini)",
+            "LangGraph Agent (Tool-calling)",
             "Face Recognition (DeepFace)",
             "Reminder Management",
             "User & Pair Management",
@@ -70,6 +82,7 @@ def read_root():
         "endpoints": {
             "docs": "/docs",
             "chat": "/api/v1/chat/*",
+            "agent": "/api/v1/agent/*",
             "reminders": "/api/v1/reminders/*",
             "users": "/api/v1/users/*",
             "pairs": "/api/v1/pairs/*",

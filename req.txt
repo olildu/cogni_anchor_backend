@@ -1,9 +1,9 @@
-fastapi[all]
+fastapi
 uvicorn
 sqlalchemy
 psycopg2-binary
 face-recognition
-numpy
+numpy<2.0
 opencv-python-headless
 openai
 python-dotenv
@@ -12,5 +12,9 @@ sounddevice
 scipy
 google-generativeai
 supabase
-deepfake
+deepface
+langgraph
+langchain-google-genai
+langchain-core
+python-multipart
 tf-keras
