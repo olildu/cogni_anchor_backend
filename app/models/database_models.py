@@ -28,6 +28,17 @@ class UserProfile(BaseModel):
     role: UserRole
     pair_id: Optional[str] = None
     created_at: Optional[datetime] = None
+    name: Optional[str] = None
+    contact: Optional[str] = None
+    gender: Optional[str] = None
+    date_of_birth: Optional[datetime] = None
+
+class UserProfileUpdate(BaseModel):
+    """Model for updating user profile details"""
+    name: Optional[str] = None
+    contact: Optional[str] = None
+    gender: Optional[str] = None
+    date_of_birth: Optional[datetime] = None
 
 # ===== PAIR MODELS =====
 
@@ -54,8 +65,8 @@ class ReminderCreate(BaseModel):
     """Model for creating a reminder"""
     pair_id: str
     title: str
-    date: str  # Format: dd MMM yyyy (e.g., "25 Dec 2024")
-    time: str  # Format: hh:mm a (e.g., "02:30 PM")
+    date: str  
+    time: str  
 
 class ReminderUpdate(BaseModel):
     """Model for updating a reminder"""
@@ -65,12 +76,15 @@ class ReminderUpdate(BaseModel):
 
 class ReminderInfo(BaseModel):
     """Reminder information"""
-    id: int # Keep as int if reminders table uses SERIAL/BIGINT, change to str if using UUIDs
+    id: int
     pair_id: str
     title: str
     date: str
     time: str
     created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
 
 class ReminderListResponse(BaseModel):
     """Response model for listing reminders"""
@@ -87,7 +101,7 @@ class PersonCreate(BaseModel):
     occupation: str
     age: Optional[int] = None
     notes: Optional[str] = None
-    embedding: List[float]  # 192-dimensional face embedding vector
+    embedding: List[float]
 
 class PersonUpdate(BaseModel):
     """Model for updating person information"""
@@ -100,7 +114,7 @@ class PersonUpdate(BaseModel):
 
 class PersonInfo(BaseModel):
     """Person information"""
-    id: str # ✅ CHANGED: from int to str (to support UUIDs)
+    id: str 
     pair_id: str
     name: str
     relationship: str
@@ -110,6 +124,9 @@ class PersonInfo(BaseModel):
     image_url: Optional[str] = None
     created_at: Optional[datetime] = None
 
+    class Config:
+        from_attributes = True
+
 class PersonWithEmbedding(PersonInfo):
     """Person information with face embedding"""
     embedding: List[float]
@@ -117,12 +134,12 @@ class PersonWithEmbedding(PersonInfo):
 class FaceScanRequest(BaseModel):
     """Model for face scanning/matching request"""
     pair_id: str
-    embedding: List[float]  # Face embedding to match
+    embedding: List[float]
 
 class FaceScanResponse(BaseModel):
     """Response model for face scanning"""
     matched: bool
-    score: Optional[float] = None  # Cosine similarity score (0-1)
+    score: Optional[float] = None
     person: Optional[PersonInfo] = None
 
 class PeopleListResponse(BaseModel):
@@ -130,15 +147,49 @@ class PeopleListResponse(BaseModel):
     people: List[PersonInfo]
     count: int
 
+# ===== PATIENT STATUS & LOCATION MODELS =====
+
+class PatientStatusUpdate(BaseModel):
+    location_permission: Optional[bool] = None
+    mic_permission: Optional[bool] = None
+    location_toggle_on: Optional[bool] = None
+    mic_toggle_on: Optional[bool] = None
+    is_logged_in: Optional[bool] = None
+    last_active_at: Optional[datetime] = None
+
+class PatientStatusInfo(BaseModel):
+    patient_user_id: str
+    location_permission: bool
+    mic_permission: bool
+    location_toggle_on: bool
+    mic_toggle_on: bool
+    is_logged_in: bool
+    last_active_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class LocationUpdate(BaseModel):
+    pair_id: str
+    latitude: float
+    longitude: float
+
+class LocationInfo(BaseModel):
+    patient_user_id: str
+    latitude: float
+    longitude: float
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
 # ===== GENERIC RESPONSE MODELS =====
 
 class SuccessResponse(BaseModel):
-    """Generic success response"""
     ok: bool = True
     message: str
 
 class ErrorResponse(BaseModel):
-    """Generic error response"""
     ok: bool = False
     error: str
     detail: Optional[str] = None

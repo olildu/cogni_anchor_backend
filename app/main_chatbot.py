@@ -8,7 +8,6 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-# Load environment variables
 load_dotenv()
 
 # --- Logging Setup ---
@@ -22,16 +21,14 @@ app = FastAPI(
     version="2.0.0"
 )
 
-# Add CORS middleware for Flutter app
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins (adjust for production)
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Import and include all routers
 from app.chatbot import router as chatbot_router
 from app.routes.reminders import router as reminders_router
 from app.routes.users_pairs import router as users_pairs_router

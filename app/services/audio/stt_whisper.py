@@ -1,7 +1,11 @@
-# stt_whisper.py
 import os
+import logging
 from dotenv import load_dotenv
 from openai import OpenAI
+
+# Setup logging since this might be run standalone
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("STT_Whisper")
 
 load_dotenv()
 
@@ -29,4 +33,6 @@ if __name__ == "__main__":
     p.add_argument("audio_path")
     p.add_argument("--model", default="gpt-4o-mini-transcribe")
     args = p.parse_args()
-    print(transcribe_file(args.audio_path, model=args.model))
+    
+    result = transcribe_file(args.audio_path, model=args.model)
+    logger.info(result)

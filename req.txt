@@ -18,3 +18,7 @@ langchain-google-genai
 langchain-core
 python-multipart
 tf-keras
+passlib 
+argon2-cffi
+firebase_admin
+apscheduler

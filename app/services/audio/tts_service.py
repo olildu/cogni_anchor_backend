@@ -58,15 +58,12 @@ class TTSService:
             logger.error("pyttsx3 engine not initialized")
             return None
 
-        # pyttsx3 is more reliable with .wav files on some platforms
-        # We auto-correct .mp3 to .wav here to prevent engine errors
         if output_path.endswith(".mp3"):
              output_path = output_path.replace(".mp3", ".wav")
 
         try:
             logger.info(f"Generating offline audio file: {output_path}")
             
-            # Save to file
             self.engine.save_to_file(text, output_path)
             self.engine.runAndWait()
 

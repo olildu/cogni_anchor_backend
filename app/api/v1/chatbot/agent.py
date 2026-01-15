@@ -4,14 +4,16 @@ Intelligent chatbot with tool-calling capabilities
 """
 
 import logging
-from fastapi import APIRouter, HTTPException, status
+import json
+from fastapi import APIRouter, HTTPException, status, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 from typing import Optional
-from app.services.langgraph_agent import (
+from app.services.chatbot.langgraph_agent import (
     run_agent,
     get_agent_history,
     add_to_agent_history
 )
+from app.services.infra.websocket_manager import agent_manager
 
 logger = logging.getLogger("AgentAPI")
 router = APIRouter(prefix="/api/v1/agent", tags=["Agent"])
@@ -38,36 +40,13 @@ class AgentChatResponse(BaseModel):
 @router.post("/chat", response_model=AgentChatResponse)
 async def agent_chat(request: AgentChatRequest):
     """
-    Chat with the LangGraph agent
-
-    The agent can:
-    - Create reminders from natural language
-    - List upcoming reminders
-    - Delete reminders
-    - Send emergency alerts to caregivers
-    - Provide emotional support
-
-    Request body:
-    {
-        "patient_id": "demo_patient_001",
-        "pair_id": "demo_pair_001",
-        "message": "Remind me to take my medicine at 8pm"
-    }
-
-    Response:
-    {
-        "response": "Reminder created successfully! I'll remind you about 'Take medicine' on 25 Dec 2024 at 08:00 PM.",
-        "patient_id": "demo_patient_001",
-        "pair_id": "demo_pair_001"
-    }
+    Chat with the LangGraph agent via HTTP (Legacy/Fallback)
     """
     try:
         logger.info(f"Agent chat request from patient {request.patient_id}: {request.message}")
 
-        # Get conversation history
         history = get_agent_history(request.patient_id)
 
-        # Run the agent
         response = await run_agent(
             patient_id=request.patient_id,
             pair_id=request.pair_id,
@@ -75,11 +54,8 @@ async def agent_chat(request: AgentChatRequest):
             conversation_history=history
         )
 
-        # Update conversation history
         add_to_agent_history(request.patient_id, "user", request.message)
         add_to_agent_history(request.patient_id, "assistant", response)
-
-        logger.info(f"Agent response generated successfully for patient {request.patient_id}")
 
         return AgentChatResponse(
             response=response,
@@ -94,20 +70,64 @@ async def agent_chat(request: AgentChatRequest):
             detail=f"Failed to process agent chat: {str(e)}"
         )
 
+@router.websocket("/ws/{patient_id}/{pair_id}")
+async def ws_agent_chat(websocket: WebSocket, patient_id: str, pair_id: str):
+    """
+    Real-time WebSocket for Agent Chat
+    URL: ws://<host>/api/v1/agent/ws/{patient_id}/{pair_id}
+    """
+    await agent_manager.connect(websocket, patient_id)
+    try:
+        while True:
+            # 1. Receive Message
+            data = await websocket.receive_text()
+            
+            # Parse JSON if possible, else treat as raw string
+            user_message = ""
+            try:
+                payload = json.loads(data)
+                user_message = payload.get("message", "")
+            except:
+                user_message = data
+
+            if not user_message:
+                continue
+
+            # 2. Process with Agent
+            history = get_agent_history(patient_id)
+            
+            # Update History (User)
+            add_to_agent_history(patient_id, "user", user_message)
+
+            # Run Agent
+            response_text = await run_agent(
+                patient_id=patient_id,
+                pair_id=pair_id,
+                message=user_message,
+                conversation_history=history
+            )
+
+            # Update History (Assistant)
+            add_to_agent_history(patient_id, "assistant", response_text)
+
+            # 3. Send Response
+            response_data = {
+                "response": response_text,
+                "patient_id": patient_id,
+                "pair_id": pair_id
+            }
+            await agent_manager.send_personal_message(json.dumps(response_data), websocket)
+
+    except WebSocketDisconnect:
+        agent_manager.disconnect(websocket, patient_id)
+    except Exception as e:
+        logger.error(f"Agent WS Error: {e}")
+        agent_manager.disconnect(websocket, patient_id)
+
 
 @router.delete("/history/{patient_id}")
 async def clear_agent_history(patient_id: str):
-    """
-    Clear conversation history for a patient
-
-    This resets the agent's memory of past conversations.
-
-    Response:
-    {
-        "message": "Conversation history cleared",
-        "patient_id": "demo_patient_001"
-    }
-    """
+    """Clear conversation history for a patient"""
     try:
         from app.services.langgraph_agent import agent_conversations
 
@@ -130,16 +150,7 @@ async def clear_agent_history(patient_id: str):
 
 @router.get("/health")
 async def agent_health_check():
-    """
-    Health check for agent service
-
-    Response:
-    {
-        "status": "healthy",
-        "service": "langgraph_agent",
-        "features": ["reminder_management", "emergency_alerts", "emotional_support"]
-    }
-    """
+    """Health check for agent service"""
     return {
         "status": "healthy",
         "service": "langgraph_agent",
@@ -147,7 +158,8 @@ async def agent_health_check():
             "reminder_management",
             "emergency_alerts",
             "emotional_support",
-            "tool_calling"
+            "tool_calling",
+            "websocket_chat"
         ],
         "tools": [
             "create_reminder",
