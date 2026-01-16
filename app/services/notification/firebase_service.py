@@ -87,3 +87,22 @@ def send_multicast_notification(tokens: list[str], title: str, body: str, data: 
     except Exception as e:
         logger.error(f"Error sending multicast message: {e}")
         return False 
+    
+def send_status_update(token: str, data: dict):
+    """
+    Sends a high-priority data message to wake up the app 
+    and trigger background services (Location/Mic).
+    """
+    try:
+        message = messaging.Message(
+            data=data,
+            token=token,
+            # AndroidConfig with high priority is crucial for waking up killed apps
+            android=messaging.AndroidConfig(priority='high') 
+        )
+        response = messaging.send(message)
+        logger.info(f"Sent status update FCM to wake app: {response}")
+        return True
+    except Exception as e:
+        logger.error(f"Error sending status FCM: {e}")
+        return False

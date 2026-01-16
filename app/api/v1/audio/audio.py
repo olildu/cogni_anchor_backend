@@ -6,7 +6,8 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from app.services.infra.websocket_manager import audio_manager
 import logging
 
-router = APIRouter(tags=["Audio Streaming"])
+# FIX: Added prefix to match standard API structure
+router = APIRouter(prefix="/api/v1/audio", tags=["Audio Streaming"])
 logger = logging.getLogger("AudioSocket")
 
 @router.websocket("/ws/audio/{pair_id}/{role}")
@@ -26,7 +27,7 @@ async def audio_websocket(websocket: WebSocket, pair_id: str, role: str):
             
             if "text" in message:
                 command = message["text"]
-                # Relay commands (e.g., "START_MIC") to the other party
+                # Relay commands (e.g., "START_MIC", "ERROR_MIC") to the other party
                 await audio_manager.broadcast_text(command, pair_id, websocket)
                 
             elif "bytes" in message:

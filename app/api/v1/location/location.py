@@ -6,7 +6,8 @@ from app.models.sql_models import LiveLocation
 import logging
 import json
 
-router = APIRouter(tags=["Live Location"])
+# FIX: Added prefix to match the app's WebSocket URL expectation
+router = APIRouter(prefix="/api/v1/location", tags=["Live Location"])
 logger = logging.getLogger("LocationSocket")
 
 @router.websocket("/ws/location/{pair_id}/{role}")

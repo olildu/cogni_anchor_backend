@@ -188,10 +188,12 @@ async def get_pair_info(pair_id: str, db: Session = Depends(get_db)):
         pair = db.query(Pair).filter(Pair.id == pair_id).first()
         if not pair:
             raise HTTPException(status_code=404, detail="Pair not found")
+        
+        # FIX: Explicitly cast UUIDs to strings to satisfy Pydantic strict typing
         return PairInfo(
             id=str(pair.id),
-            patient_user_id=pair.patient_user_id,
-            caretaker_user_id=pair.caretaker_user_id,
+            patient_user_id=str(pair.patient_user_id),
+            caretaker_user_id=str(pair.caretaker_user_id) if pair.caretaker_user_id else None,
             created_at=pair.created_at
         )
     except HTTPException: raise
@@ -214,10 +216,11 @@ async def connect_pair(connection: PairConnection, db: Session = Depends(get_db)
         db.commit()
         db.refresh(pair)
 
+        # FIX: Explicitly cast UUIDs to strings
         return PairInfo(
             id=str(pair.id),
-            patient_user_id=pair.patient_user_id,
-            caretaker_user_id=pair.caretaker_user_id,
+            patient_user_id=str(pair.patient_user_id),
+            caretaker_user_id=str(pair.caretaker_user_id) if pair.caretaker_user_id else None,
             created_at=pair.created_at
         )
     except HTTPException: raise

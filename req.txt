@@ -22,3 +22,5 @@ passlib
 argon2-cffi
 firebase_admin
 apscheduler
+pytest
+httpx

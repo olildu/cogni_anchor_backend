@@ -7,8 +7,9 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.models.sql_models import PatientStatus
+from app.models.sql_models import PatientStatus, User
 from app.models.database_models import PatientStatusUpdate, PatientStatusInfo
+from app.services.notification.firebase_service import send_status_update
 
 logger = logging.getLogger("PatientFeaturesAPI")
 router = APIRouter(prefix="/api/v1/patient", tags=["Patient Status"])
@@ -40,6 +41,25 @@ async def update_status(status_update: PatientStatusUpdate, user_id: str, db: Se
             status_record.is_logged_in = status_update.is_logged_in
             
         db.commit()
+
+        # Check if we need to wake up the patient app
+        if status_update.location_toggle_on is True or status_update.mic_toggle_on is True:
+            try:
+                # Fetch User to get FCM Token
+                user = db.query(User).filter(User.id == user_id).first()
+                if user and user.fcm_token:
+                    payload = {
+                        "type": "status_update",
+                        "location_enabled": str(status_record.location_toggle_on).lower(),
+                        "mic_enabled": str(status_record.mic_toggle_on).lower()
+                    }
+                    logger.info(f"Sending wake-up call to patient {user_id}")
+                    send_status_update(user.fcm_token, payload)
+                else:
+                    logger.warning(f"No FCM token found for patient {user_id}")
+            except Exception as e:
+                logger.error(f"Failed to send wake-up FCM: {e}")
+
         return {"message": "Status updated successfully"}
         
     except Exception as e:
