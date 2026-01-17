@@ -21,7 +21,8 @@ from app.models.database_models import (
     PeopleListResponse,
     SuccessResponse
 )
-from app.services.face_recognition import *
+
+from app.services.face_recognition.face_recognition_service import get_face_recognition_service
 
 logger = logging.getLogger("FaceRecognitionAPI")
 router = APIRouter(prefix="/api/v1/face", tags=["Face Recognition"])
