@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy | CogniAnchor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF653A;
+            --primary-light: #FFE5DE;
+            --text-main: #1A1C1E;
+            --text-secondary: #6C757D;
+            --bg: #FAFAFA;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            color: var(--text-main);
+            background-color: var(--bg);
+            margin: 0;
+            padding: 0;
+        }
+        .header {
+            background-color: var(--primary);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+            border-bottom-left-radius: 40px;
+            border-bottom-right-radius: 40px;
+        }
+        .container {
+            max-width: 800px;
+            margin: -40px auto 40px;
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        h1 { margin: 0; font-size: 2.5rem; }
+        h2 { color: var(--primary); margin-top: 30px; border-left: 4px solid var(--primary); padding-left: 15px; }
+        .last-updated { color: var(--primary-light); font-weight: 300; }
+        .highlight-box {
+            background-color: var(--primary-light);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 5px solid var(--primary);
+            margin: 20px 0;
+        }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 10px; }
+        footer { text-align: center; padding: 20px; color: var(--text-secondary); font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>CogniAnchor</h1>
+    <p class="last-updated">Privacy Policy | Last Updated: January 2026</p>
+</div>
+
+<div class="container">
+    <p>Welcome to <strong>CogniAnchor</strong>. Your privacy and the safety of your loved ones are our highest priorities. This policy explains how we handle data within our cognitive health companion platform.</p>
+
+    <div class="highlight-box">
+        <strong>Key Summary:</strong> We collect real-time location and audio data solely for the safety of the Patient. This data is only accessible to the specifically paired Caretaker account.
+    </div>
+
+    <h2>1. Information We Collect</h2>
+    <ul>
+        <li><strong>Account Data:</strong> Names, emails, and profile information used for authentication and account management.</li>
+        <li><strong>Precise Location:</strong> Real-time GPS coordinates are collected from Patient devices to enable live tracking by the Caretaker.</li>
+        <li><strong>Audio Data:</strong> Environmental audio is streamed via WebSocket to the Caretaker for safety monitoring ("Listen Live") and processed for AI companionship.</li>
+        <li><strong>Biometric Data (Facial Recognition):</strong> We process photos to generate mathematical "embeddings" (vectors) to identify family members. Original images are stored locally or on secure servers to assist memory retrieval.</li>
+    </ul>
+
+    <h2>2. How Data is Shared</h2>
+    <p>Data is <strong>not</strong> sold to third parties. Sharing occurs exclusively between:</p>
+    <ul>
+        <li><strong>Patient and Caretaker:</strong> Location and audio data are shared only via the secure pairing code established during setup.</li>
+        <li><strong>AI Processing:</strong> Audio and text queries are processed via secure APIs (Google Gemini) to provide companionship responses.</li>
+    </ul>
+
+    <h2>3. Your Control & Permissions</h2>
+    <p>The Patient device provides visual indicators when location or microphone services are active. Caretakers may remotely toggle these features to ensure safety or preserve battery. Permissions can be revoked at any time via system settings.</p>
+
+    <h2>4. Data Retention</h2>
+    <p>User-generated reminders and face recognition profiles are stored as long as the account remains active. Users may delete specific face profiles or their entire account through the settings menu.</p>
+
+    <h2>5. Contact Us</h2>
+    <p>If you have questions about this policy, please contact support@cognianchor.example.com.</p>
+</div>
+
+<footer>
+    &copy; 2026 CogniAnchor Project. Designed for Dementia Care.
+</footer>
+
+</body>
+</html>

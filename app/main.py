@@ -3,6 +3,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse 
 from dotenv import load_dotenv
 
 from app.api.v1.users import users_pairs
@@ -45,6 +46,14 @@ app.include_router(location.router)
 @app.on_event("startup")
 async def startup_event():
     start_scheduler()
+
+@app.get("/privacy", response_class=HTMLResponse)
+async def get_privacy_policy():
+    privacy_path = os.path.join(os.getcwd(), "static", "privacy.html")
+    if os.path.exists(privacy_path):
+        with open(privacy_path, "r", encoding="utf-8") as f:
+            return f.read()
+    return HTMLResponse(content="Privacy Policy not found in static folder", status_code=404)
 
 @app.get("/")
 async def root():
