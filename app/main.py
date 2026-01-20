@@ -11,6 +11,7 @@ from app.api.v1.face_recognition import face_recognition
 from app.api.v1.chatbot import patient_features, agent
 from app.api.v1.audio import audio
 from app.api.v1.location import location
+from app import chatbot 
 from app.services.infra.scheduler import start_scheduler
 
 load_dotenv()
@@ -27,15 +28,17 @@ app.add_middleware(
 
 os.makedirs("static/uploads", exist_ok=True)
 os.makedirs("temp", exist_ok=True)
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# FIX: Removed redundant 'prefix' arguments. 
-# Relies on prefixes defined inside the router files.
+# Mount directories to serve files
+app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/temp", StaticFiles(directory="temp"), name="temp") 
+
 app.include_router(users_pairs.router)
 app.include_router(reminders.router)
 app.include_router(face_recognition.router)
 app.include_router(patient_features.router)
 app.include_router(agent.router)
+app.include_router(chatbot.router) 
 app.include_router(audio.router)
 app.include_router(location.router)
 
