@@ -62,22 +62,23 @@ Requires **Python 3.11+** and **PostgreSQL**.
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/olildu/cogni_anchor_backend.git
-   cd cogni_anchor_backend
+    git clone https://github.com/olildu/cogni_anchor_backend.git
+    cd cogni_anchor_backend
    ```
 
 2. **Environment Configuration:**
    ```bash
-   DATABASE_URL=postgresql://user:password@localhost/cogni_anchor
-OPENAI_API_KEY=your_key
-FIREBASE_CREDENTIALS_PATH=path/to/firebase.json
+    DATABASE_URL=postgresql://user:password@localhost/cogni_anchor
+    OPENAI_API_KEY=your_key
+    FIREBASE_CREDENTIALS_PATH=path/to/firebase.json
    ```
 
 3. **Environment Configuration:**
    ```bash
-   pip install -r req.txt
-python -m app.main
+    pip install -r req.txt
+    python -m app.main
    ```
+   
    ## 📱 Ecosystem Logic
 
 Cogni Anchor is designed for a **Caretaker–Patient** relationship.  
